@@ -14,7 +14,10 @@ Pipeline:
   Step 8 : MBDA* Execution      — bidirectional A* pada LCC undirected
 """
 
-import re, ast, heapq, pickle
+import re
+import ast
+import heapq
+import pickle
 import pandas as pd
 import numpy as np
 import networkx as nx
@@ -25,9 +28,10 @@ import community as community_louvain
 
 import sys
 
-CSV_PATH    = "dataTwitter_1000.csv"
+CSV_PATH = "dataTwitter_1000.csv"
 OUTPUT_GRAPH = "graph.pkl"
-OUTPUT_PKL   = "mbda_final.pkl"
+OUTPUT_PKL = "mbda_final.pkl"
+
 
 def run_visualization(G_lcc, partition_sub, results):
     print("\nSTEP 9 — Visualizing Graph & MBDA* Paths")
@@ -37,7 +41,7 @@ def run_visualization(G_lcc, partition_sub, results):
 
         # 1. Setup figure
         plt.figure(figsize=(14, 11))
-        
+
         # 2. Layout (Spring layout)
         print("  Calculating layout...")
         pos = nx.spring_layout(G_lcc, k=0.2, seed=42)
@@ -45,13 +49,17 @@ def run_visualization(G_lcc, partition_sub, results):
         # 3. Get colors for nodes based on Louvain clusters
         unique_clusters = sorted(list(set(partition_sub.values())))
         color_palette = plt.colormaps["tab20"]
-        cluster_color_map = {cluster: color_palette(i % 20) for i, cluster in enumerate(unique_clusters)}
-        node_colors = [cluster_color_map[partition_sub[node]] for node in G_lcc.nodes()]
+        cluster_color_map = {cluster: color_palette(
+            i % 20) for i, cluster in enumerate(unique_clusters)}
+        node_colors = [cluster_color_map[partition_sub[node]]
+                       for node in G_lcc.nodes()]
 
         # 4. Draw background network
         print("  Drawing nodes and edges...")
-        nx.draw_networkx_nodes(G_lcc, pos, node_color=node_colors, node_size=80, alpha=0.7, edgecolors="none")
-        nx.draw_networkx_edges(G_lcc, pos, width=0.5, edge_color="#d3d3d3", alpha=0.4)
+        nx.draw_networkx_nodes(
+            G_lcc, pos, node_color=node_colors, node_size=80, alpha=0.7, edgecolors="none")
+        nx.draw_networkx_edges(G_lcc, pos, width=0.5,
+                               edge_color="#d3d3d3", alpha=0.4)
 
         # 5. Highlight and Draw Scenario Paths
         path_colors = ["#FF5733", "#33FF57", "#3357FF", "#F1C40F", "#9B59B6"]
@@ -59,22 +67,25 @@ def run_visualization(G_lcc, partition_sub, results):
 
         for idx, res in enumerate(results):
             path = res["path"]
-            if not path or len(path) < 2: continue
-            
+            if not path or len(path) < 2:
+                continue
+
             path_edges = list(zip(path[:-1], path[1:]))
             color = path_colors[idx % len(path_colors)]
-            
+
             # Draw path edges
             nx.draw_networkx_edges(
                 G_lcc, pos, edgelist=path_edges,
                 width=3.0, edge_color=color,
                 alpha=0.95, label=f"Path {idx+1}: {res['desc']}"
             )
-            
+
             # Highlight source & goal nodes
             src, goal = res["source"], res["goal"]
-            nx.draw_networkx_nodes(G_lcc, pos, nodelist=[src], node_color="gold", node_shape="^", node_size=250, edgecolors="black", linewidths=1.5)
-            nx.draw_networkx_nodes(G_lcc, pos, nodelist=[goal], node_color="cyan", node_shape="s", node_size=200, edgecolors="black", linewidths=1.5)
+            nx.draw_networkx_nodes(G_lcc, pos, nodelist=[
+                                   src], node_color="gold", node_shape="^", node_size=250, edgecolors="black", linewidths=1.5)
+            nx.draw_networkx_nodes(G_lcc, pos, nodelist=[
+                                   goal], node_color="cyan", node_shape="s", node_size=200, edgecolors="black", linewidths=1.5)
 
             # Label source & goal nodes
             for node, label_prefix in [(src, "Start: "), (goal, "Goal: ")]:
@@ -83,14 +94,17 @@ def run_visualization(G_lcc, partition_sub, results):
                     # Adjust text position slightly offset
                     nx_pos = pos[node]
                     plt.text(
-                        nx_pos[0], nx_pos[1] + 0.02, f"{label_prefix}{node}", 
-                        fontsize=9, fontweight="bold", 
-                        bbox=dict(facecolor="white", alpha=0.8, edgecolor="gray", boxstyle="round,pad=0.2"),
+                        nx_pos[0], nx_pos[1] + 0.02, f"{label_prefix}{node}",
+                        fontsize=9, fontweight="bold",
+                        bbox=dict(facecolor="white", alpha=0.8,
+                                  edgecolor="gray", boxstyle="round,pad=0.2"),
                         horizontalalignment="center"
                     )
 
-        plt.title("MBDA* Path Search & Louvain Communities on Twitter Mention Graph", fontsize=15, fontweight="bold", pad=15)
-        plt.legend(loc="upper right", frameon=True, facecolor="white", edgecolor="none", fontsize=9)
+        plt.title("MBDA* Path Search & Louvain Communities on Twitter Mention Graph",
+                  fontsize=15, fontweight="bold", pad=15)
+        plt.legend(loc="upper right", frameon=True,
+                   facecolor="white", edgecolor="none", fontsize=9)
         plt.axis("off")
         plt.tight_layout()
 
@@ -102,12 +116,13 @@ def run_visualization(G_lcc, partition_sub, results):
         # 7. Automatically open the image on Windows
         print("  Opening graph visualization automatically...")
         os.startfile(output_img)
-        
+
         # 8. Show interactive plot
         plt.show()
 
     except Exception as e:
         print(f"  [ERROR] Visualization failed: {e}")
+
 
 # Check if running in visualization-only mode
 if len(sys.argv) > 1 and sys.argv[1] == "--view":
@@ -116,7 +131,8 @@ if len(sys.argv) > 1 and sys.argv[1] == "--view":
         with open(OUTPUT_PKL, "rb") as f:
             data = pickle.load(f)
         print("[SUCCESS] Data loaded.")
-        run_visualization(data["G_lcc"], data["partition_sub"], data["results"])
+        run_visualization(
+            data["G_lcc"], data["partition_sub"], data["results"])
         sys.exit(0)
     except Exception as e:
         print(f"Failed to load/visualize {OUTPUT_PKL}: {e}")
@@ -138,19 +154,23 @@ print(f"  Removed {before - len(df)} duplicate rows -> {len(df)} rows remain")
 # ============================================================
 print("STEP 2 — Parsing author & entities")
 
-def safe_parse(val):
-    try:   return ast.literal_eval(str(val))
-    except: return {}
 
-df["author_parsed"]   = df["author"].apply(safe_parse)
+def safe_parse(val):
+    try:
+        return ast.literal_eval(str(val))
+    except:
+        return {}
+
+
+df["author_parsed"] = df["author"].apply(safe_parse)
 df["entities_parsed"] = df["entities"].apply(safe_parse)
 
-df["username"]     = df["author_parsed"].apply(lambda x: x.get("userName", ""))
+df["username"] = df["author_parsed"].apply(lambda x: x.get("userName", ""))
 df["display_name"] = df["author_parsed"].apply(lambda x: x.get("name", ""))
-df["hashtags_list"]= df["entities_parsed"].apply(
-    lambda x: [h.get("text","").lower() for h in x.get("hashtags",[])])
+df["hashtags_list"] = df["entities_parsed"].apply(
+    lambda x: [h.get("text", "").lower() for h in x.get("hashtags", [])])
 df["mentions_list"] = df["entities_parsed"].apply(
-    lambda x: [m.get("screen_name","") for m in x.get("user_mentions",[])])
+    lambda x: [m.get("screen_name", "") for m in x.get("user_mentions", [])])
 print(f"  Parsed OK — {df['username'].nunique()} unique usernames")
 
 # ============================================================
@@ -158,7 +178,7 @@ print(f"  Parsed OK — {df['username'].nunique()} unique usernames")
 # ============================================================
 print("STEP 3 — Filter noise")
 before = len(df)
-df = df[df["lang"].isin(["in","en"])]
+df = df[df["lang"].isin(["in", "en"])]
 df = df[df["viewCount"] > 0]
 df.reset_index(drop=True, inplace=True)
 print(f"  Removed {before - len(df)} noise rows -> {len(df)} rows remain")
@@ -168,6 +188,7 @@ print(f"  Removed {before - len(df)} noise rows -> {len(df)} rows remain")
 # ============================================================
 print("STEP 4 — Normalize tweet text")
 
+
 def normalize(text):
     text = str(text).lower()
     text = re.sub(r"http\S+", "", text)
@@ -175,6 +196,7 @@ def normalize(text):
     text = re.sub(r"#\w+", "", text)
     text = re.sub(r"[^\w\s]", " ", text)
     return re.sub(r"\s+", " ", text).strip()
+
 
 df["text_clean"] = df["text"].apply(normalize)
 print(f"  Normalized {len(df)} tweets")
@@ -187,23 +209,25 @@ G = nx.DiGraph()
 
 for _, row in df.iterrows():
     src = row["username"]
-    if not src: continue
+    if not src:
+        continue
     if not G.has_node(src):
         G.add_node(src, node_type="user", tweet_count=0,
                    total_rt=0, total_reply=0, display_name=row["display_name"])
     G.nodes[src]["tweet_count"] += 1
-    G.nodes[src]["total_rt"]    += row["retweetCount"]
+    G.nodes[src]["total_rt"] += row["retweetCount"]
     G.nodes[src]["total_reply"] += row["replyCount"]
 
     w = int(row["retweetCount"]) + int(row["replyCount"])
     for tgt in row["mentions_list"]:
-        if not tgt: continue
+        if not tgt:
+            continue
         if not G.has_node(tgt):
             G.add_node(tgt, node_type="user", tweet_count=0,
                        total_rt=0, total_reply=0, display_name=tgt)
         if G.has_edge(src, tgt):
             G[src][tgt]["weight"] += w + 1
-            G[src][tgt]["count"]  += 1
+            G[src][tgt]["count"] += 1
         else:
             G.add_edge(src, tgt, weight=w+1, count=1, edge_type="mention")
 
@@ -217,10 +241,12 @@ G_uu = G.to_undirected()
 isolated = list(nx.isolates(G_uu))
 G_conn = G_uu.copy()
 G_conn.remove_nodes_from(isolated)
-partition = community_louvain.best_partition(G_conn, weight="weight", random_state=42)
+partition = community_louvain.best_partition(
+    G_conn, weight="weight", random_state=42)
 n_clusters = max(partition.values()) + 1
 print(f"  Clusters detected: {n_clusters}")
-nx.set_node_attributes(G, {n: partition.get(n,-1) for n in G.nodes()}, "cluster")
+nx.set_node_attributes(G, {n: partition.get(n, -1)
+                       for n in G.nodes()}, "cluster")
 
 # ============================================================
 # STEP 7: HEURISTIC h(n) — TF-IDF COSINE SIMILARITY
@@ -230,18 +256,20 @@ user_texts = (df.groupby("username")["text_clean"]
                 .apply(lambda x: " ".join(x)).reset_index())
 user_texts.columns = ["username", "combined_text"]
 
-vectorizer   = TfidfVectorizer(max_features=500, min_df=2, ngram_range=(1,2))
+vectorizer = TfidfVectorizer(max_features=500, min_df=2, ngram_range=(1, 2))
 tfidf_matrix = vectorizer.fit_transform(user_texts["combined_text"])
 
 neutral_text = ("kebijakan pemerintah indonesia masyarakat ekonomi sosial "
                 "program pembangunan kesejahteraan rakyat")
-neutral_vec  = vectorizer.transform([neutral_text])
+neutral_vec = vectorizer.transform([neutral_text])
 similarities = cosine_similarity(tfidf_matrix, neutral_vec).flatten()
 
 user_texts["h_value"] = 1 - similarities
 h_dict = dict(zip(user_texts["username"], user_texts["h_value"]))
-nx.set_node_attributes(G, {n: h_dict.get(n,1.0) for n in G.nodes()}, "h_value")
-print(f"  h(n) range: [{min(h_dict.values()):.4f}, {max(h_dict.values()):.4f}]")
+nx.set_node_attributes(G, {n: h_dict.get(n, 1.0)
+                       for n in G.nodes()}, "h_value")
+print(
+    f"  h(n) range: [{min(h_dict.values()):.4f}, {max(h_dict.values()):.4f}]")
 
 # ============================================================
 # STEP 8: MBDA* EXECUTION
@@ -250,7 +278,8 @@ print("STEP 8 — Modified Bidirectional A*")
 
 lcc = max(nx.connected_components(G_uu), key=len)
 G_lcc = G_uu.subgraph(lcc).copy()
-partition_sub = {n: c for n,c in partition.items() if n in G_lcc}
+partition_sub = {n: c for n, c in partition.items() if n in G_lcc}
+
 
 def mbda_star(G, source, goal, max_iter=5000):
     """Modified Bidirectional A* untuk mitigasi filter bubble."""
@@ -266,9 +295,9 @@ def mbda_star(G, source, goal, max_iter=5000):
     except Exception as e:
         h_g_dict = {}
 
-    def h_s(n):     return G.nodes[n].get("h_value", 1.0)
-    def h_g(n):     return h_g_dict.get(n, 1.0)
-    def cost(u,v):  return max(0.1, 1.0/(G[u][v].get("weight",1)+1))
+    def h_s(n): return G.nodes[n].get("h_value", 1.0)
+    def h_g(n): return h_g_dict.get(n, 1.0)
+    def cost(u, v): return max(0.1, 1.0/(G[u][v].get("weight", 1)+1))
 
     # Formulasi inisialisasi awal sesuai slide:
     # fs(S) = g(S,S) + 0.5 * [hs(S) - hg(S)]
@@ -280,17 +309,19 @@ def mbda_star(G, source, goal, max_iter=5000):
     open_b = [(f_goal,   0.0, goal,   [goal])]
     cf, cb = {}, {}
     best = {"cost": float("inf"), "path": None}
-    exp  = [0]
+    exp = [0]
 
     def step(oq, ct, co, fwd):
-        if not oq: return
+        if not oq:
+            return
         fe, g, cur, path = heapq.heappop(oq)
         exp[0] += 1
-        if cur in ct: return
+        if cur in ct:
+            return
         ct[cur] = (g, path)
         if cur in co:
             g2, p2 = co[cur]
-            total  = g + g2
+            total = g + g2
             if total < best["cost"]:
                 best["cost"] = total
                 if fwd:
@@ -312,9 +343,12 @@ def mbda_star(G, source, goal, max_iter=5000):
     for _ in range(max_iter):
         step(open_f, cf, cb, True)
         step(open_b, cb, cf, False)
-        if best["path"]: break
-        if not open_f and not open_b: break
+        if best["path"]:
+            break
+        if not open_f and not open_b:
+            break
     return best["path"], best["cost"], exp[0]
+
 
 # --- 5 Scenario Tests ---
 scenarios = [
@@ -328,27 +362,29 @@ scenarios = [
 results = []
 for src, goal, desc in scenarios:
     if src not in G_lcc or goal not in G_lcc:
-        print(f"  - {desc}: node not in LCC"); continue
+        print(f"  - {desc}: node not in LCC")
+        continue
     path, cost_val, exp = mbda_star(G_lcc, src, goal)
     if path:
-        path_cl   = [partition_sub.get(n,-1) for n in path]
-        diversity = len(set(c for c in path_cl if c!=-1)) / len(path)
+        path_cl = [partition_sub.get(n, -1) for n in path]
+        diversity = len(set(c for c in path_cl if c != -1)) / len(path)
         print(f"  + {desc}")
-        print(f"    Steps={len(path)}, Cost={cost_val:.4f}, Explored={exp}, Diversity={diversity:.3f}")
-        results.append({"source":src,"goal":goal,"desc":desc,
-                        "path":path,"cost":cost_val,"explored":exp,"diversity":diversity})
+        print(
+            f"    Steps={len(path)}, Cost={cost_val:.4f}, Explored={exp}, Diversity={diversity:.3f}")
+        results.append({"source": src, "goal": goal, "desc": desc,
+                        "path": path, "cost": cost_val, "explored": exp, "diversity": diversity})
 
 print(f"\n[SUMMARY] {len(results)}/{len(scenarios)} scenarios resolved")
 
 # Save
-with open(OUTPUT_PKL,"wb") as f:
-    pickle.dump({"results":results,"G_lcc":G_lcc,"partition_sub":partition_sub},f)
-with open(OUTPUT_GRAPH,"wb") as f:
-    pickle.dump(G,f)
+with open(OUTPUT_PKL, "wb") as f:
+    pickle.dump({"results": results, "G_lcc": G_lcc,
+                "partition_sub": partition_sub}, f)
+with open(OUTPUT_GRAPH, "wb") as f:
+    pickle.dump(G, f)
 print("[DONE] Output saved.")
 
 # ============================================================
 # STEP 9: GRAPH VISUALIZATION (MATPLOTLIB)
 # ============================================================
 run_visualization(G_lcc, partition_sub, results)
-
