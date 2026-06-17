@@ -30,7 +30,6 @@ Setiap tweet yang diambil memiliki struktur metadata yang kaya untuk mendukung p
 ---
 
 ## 3. Pipeline Pembersihan & Pemrosesan Data (Data Preprocessing Pipeline)
-Setelah data mentah dikumpulkan, kami merancang dan mengimplementasikan pipeline pemrosesan data otomatis di [mbda_star_pipeline.py](file:///c:/scrapperTwitterX/mbda_star_pipeline.py) melalui 4 tahap awal:
 
 ```mermaid
 graph TD
@@ -41,17 +40,24 @@ graph TD
     E --> F[Clean Dataset for Graph Construction]
 ```
 
-### Detail Langkah Preprocessing:
-1. **Step 1: Basic Cleaning (Deduplication)**: Menghapus tweet duplikat berdasarkan kolom `id`. Ini penting karena satu tweet bisa muncul di beberapa kata kunci pencarian yang berbeda.
+### Detail Langkah & Hasil Pembersihan Data:
+1. **Step 1: Basic Cleaning (Deduplication)**: Menghapus tweet duplikat berdasarkan kolom `id`. Dari **3.000 data mentah**, tahap ini berhasil mengeliminasi 23 tweet duplikat yang tumpang tindih antar-keyword $\rightarrow$ **2.977 data tersisa**.
 2. **Step 2: Parse Nested Columns**: Mengurai kolom JSON bersarang (`author` & `entities`) untuk mengekstrak `username`, `display_name`, `hashtags_list`, dan `mentions_list` (kunci utama pembentukan jaringan interaksi/graf).
-3. **Step 3: Filter Noise**: Menyaring tweet hanya dalam Bahasa Indonesia (`in`) dan Inggris (`en`), serta menghapus tweet kosong atau yang memiliki `viewCount = 0` (menyaring spam/bot pasif).
+3. **Step 3: Filter Noise**: Menyaring tweet hanya dalam Bahasa Indonesia (`in`) dan Inggris (`en`), serta menghapus tweet kosong atau yang memiliki `viewCount = 0`. Tahap ini mengeliminasi 100 data spam/pasif $\rightarrow$ Dihasilkan **2.877 Data Bersih (Clean Data)**.
 4. **Step 4: Normalize Text**: Mengubah teks menjadi huruf kecil (*lowercase*), menghapus URL, mention (`@username`), hashtag (`#topic`), tanda baca, angka, dan spasi berlebih.
 
 ---
 
 ## 4. Pemodelan Graf & Komunitas (Louvain)
-* **Graf Interaksi (Step 5)**: Membangun Directed Weighted Graph di mana *Node* melambangkan user, dan *Edge* melambangkan mention dengan bobot berdasarkan jumlah retweet dan reply.
-* **Community Detection (Step 6)**: Mengelompokkan pengguna ke dalam kluster menggunakan algoritma Louvain untuk mendeteksi batas-batas *filter bubble* (echo chamber) berdasarkan pola interaksi mention mereka.
+Data bersih (**2.877 tweet**) selanjutnya digunakan sebagai fondasi utama untuk pemodelan graf interaksi sosial:
+* **Graf Interaksi (Step 5)**: Membangun Directed Weighted Graph di mana *Node* melambangkan user, dan *Edge* melambangkan interaksi mention dengan bobot berdasarkan jumlah retweet dan reply.
+  * **Total Nodes (User)**: 2.888 akun
+  * **Total Edges (Interaksi)**: 2.302 relasi
+* **Community Detection (Step 6)**: Mengelompokkan pengguna ke dalam kluster menggunakan algoritma Louvain berdasarkan bobot interaksi mention mereka.
+  * **Jumlah Kluster Komunitas (Filter Bubble)**: 285 kluster terdeteksi
+* **Largest Connected Component (LCC)**: Untuk memastikan algoritma pencarian MBDA* dapat berjalan tanpa hambatan simpul terisolasi, graf diperkecil ke komponen terhubung terbesar:
+  * **LCC Nodes**: 1.095 akun
+  * **LCC Edges**: 1.872 relasi
 
 ---
 
@@ -118,3 +124,24 @@ heapq.heappush(oq, (fn, gn, nb, path + [nb]))
 1. **Memandu Keluar Secara Halus**: Komponen $[h_s(n) - h_g(n)]$ memastikan rute pencarian mengutamakan akun yang kontennya semakin netral (nilai $h_s(n)$ mengecil) sekaligus semakin berbeda dari konten awal pengguna (nilai $h_g(n)$ membesar).
 2. **Menjaga Keterkaitan (Relevansi)**: Fungsi jarak sosial $g(n)$ memastikan lintasan rekomendasi tetap melewati akun-akun yang terhubung secara sosial (tidak melompat secara acak ke topik lain).
 3. **Hasil Akhir (Output Lintasan)**: Algoritma ini menghasilkan urutan rekomendasi akun secara bergradasi (*stepping stone*). Pengguna diajak melangkah secara perlahan dari konten yang sangat familiar, melewati konten netral di titik temu, hingga diperkenalkan pada perspektif seberang (opini alternatif) tanpa memicu penolakan psikologis (*backfire effect*).
+
+---
+
+### E. Hasil Eksekusi Skenario Pencarian MBDA*
+Berdasarkan pengujian 5 skenario pencarian pada mention network, berikut adalah rincian lintasan mitigasi filter bubble yang berhasil ditemukan:
+
+| Skenario | Titik Awal (Source) | Titik Tujuan (Goal) | Jalur Rekomendasi Akun (Solution Path) | Bobot (Cost) | Skors Keberagaman (Diversity) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **1. Bubble MBG $\rightarrow$ Media Netral** | `________dyah` | `kompascom` | `________dyah` $\rightarrow$ `prabowo` $\rightarrow$ `DaudJTP` $\rightarrow$ `kompascom` | 0.7111 | 0.500 |
+| **2. Bubble MBG $\rightarrow$ Kluster Jokowi** | `________dyah` | `jokowi` | `________dyah` $\rightarrow$ `prabowo` $\rightarrow$ `faridj_pm` $\rightarrow$ `jokowi` | 0.7000 | 0.750 |
+| **3. Akun Aktif MBG $\rightarrow$ Oposisi** | `Deka_Ajaa` | `Fahrihamzah` | `Deka_Ajaa` $\rightarrow$ `prabowo` $\rightarrow$ `faridj_pm` $\rightarrow$ `Fahrihamzah` | 0.3000 | 0.750 |
+| **4. Kluster Karir $\rightarrow$ Kluster Jokowi** | `karirfess` | `jokowi` | `karirfess` $\rightarrow$ `Jurisalem` $\rightarrow$ `prabowo` $\rightarrow$ `faridj_pm` $\rightarrow$ `jokowi` | 0.4250 | 0.600 |
+| **5. Akun Media $\rightarrow$ Fahri Hamzah** | `DaudJTP` | `Fahrihamzah` | `DaudJTP` $\rightarrow$ `PDI_Perjuangan` $\rightarrow$ `DsSupriyady` $\rightarrow$ `Fahrihamzah` | 0.4000 | 0.500 |
+
+---
+
+## 6. Rencana Progress Selanjutnya (Next Steps)
+Pada tahapan progress berikutnya, kami berencana untuk mengembangkan **program aplikasi mitigasi interaktif berbasis pengguna (user-centered application)**:
+* **Fitur Utama**: Menyediakan antarmuka input username X (Twitter) pengguna secara langsung.
+* **Analisis Dinamis**: Program akan mengaitkan username tersebut ke dalam mention graph secara *real-time*, menganalisis kemiripan postingan mereka menggunakan TF-IDF terhadap kluster opini yang ada, dan mendeteksi kluster gelembung informasi (*filter bubble*) yang melingkupi mereka saat ini.
+* **Rekomendasi Terpersonalisasi**: Berdasarkan posisi dinamis pengguna tersebut, sistem akan menghitung rute solusi mitigasi personal secara otomatis dari akun mereka menuju sumber konten penyeimbang.
