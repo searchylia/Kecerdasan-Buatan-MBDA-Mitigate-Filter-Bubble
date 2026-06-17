@@ -141,7 +141,25 @@ Berdasarkan pengujian 5 skenario pencarian pada mention network, berikut adalah 
 ---
 
 ## 6. Rencana Progress Selanjutnya (Next Steps)
-Pada tahapan progress berikutnya, kami berencana untuk mengembangkan **program aplikasi mitigasi interaktif berbasis pengguna (user-centered application)**:
-* **Fitur Utama**: Menyediakan antarmuka input username X (Twitter) pengguna secara langsung.
-* **Analisis Dinamis**: Program akan mengaitkan username tersebut ke dalam mention graph secara *real-time*, menganalisis kemiripan postingan mereka menggunakan TF-IDF terhadap kluster opini yang ada, dan mendeteksi kluster gelembung informasi (*filter bubble*) yang melingkupi mereka saat ini.
-* **Rekomendasi Terpersonalisasi**: Berdasarkan posisi dinamis pengguna tersebut, sistem akan menghitung rute solusi mitigasi personal secara otomatis dari akun mereka menuju sumber konten penyeimbang.
+
+Pada tahapan progress berikutnya, kami berencana untuk mengembangkan **Aplikasi Dashboard Interaktif (Streamlit + Auto-Scraper)**. Daripada menyuruh pengguna melakukan konfigurasi manual di Apify, kami akan membuat aplikasi berbasis web sederhana menggunakan **Streamlit** (framework Python untuk dashboard interaktif yang sangat mudah dibuat dan estetik) dengan alur kerja otomatis sebagai berikut:
+
+1. **Input Username Tunggal**
+   Pengguna hanya perlu mengetikkan username Twitter/X mereka (misalnya: `@akun_si_A`) pada kolom input di dashboard.
+2. **Scraping Otomatis di Belakang Layar (Backend Call)**
+   Program Python kita akan memanggil Apify secara otomatis menggunakan library `apify-client` (yang sudah terpasang di `.venv` kita) menggunakan API Key developer yang disimpan aman di file `.env`. Apify Actor akan berjalan di latar belakang untuk mengambil ~50 tweet terakhir dari user tersebut (proses ini berjalan otomatis sekitar 30 detik hingga 1 menit).
+3. **Pemetaan Dinamis ke Graf (Dynamic Insertion)**
+   Tweet dari user tersebut langsung dibersihkan oleh pipeline preprocessing kita. Akun user dimasukkan sebagai simpul (node) baru secara dinamis ke dalam graf 2.888 akun yang sudah ada. Program mengukur nilai heuristik $h_s(user)$ dan $h_g(user)$ menggunakan TF-IDF terhadap kluster opini dominan.
+4. **Dashboard Visualisasi Hasil Mitigasi**
+   Aplikasi Streamlit akan menampilkan:
+   * **Analisis Bias Opini**: Persentase kecondongan opini pengguna saat ini (misalnya: 75% condong ke kluster isu kebijakan A, 25% netral).
+   * **Visualisasi Jalur Rekomendasi**: Peta graf interaktif yang menunjukkan posisi simpul pengguna dan garis tebal rute jembatan (*stepping stone*) menuju konten penyeimbang.
+   * **Daftar Rekomendasi Akun**: Daftar akun jembatan yang harus mereka follow/baca secara bergradasi beserta tweet representatifnya.
+
+### Fitur Tambahan: "Mock/Demo Mode" (Penting untuk Demo Instan)
+Karena scraping real-time di Apify terkadang membutuhkan waktu tunggu (30–60 detik), kita menyediakan opsi **"Demo Mode"** di dashboard:
+* Dosen/penguji dapat memilih dari menu *drop-down* beberapa akun representatif yang sudah ada di database 2.888 akun kita (seperti `________dyah` atau `karirfess`).
+* Hasil visualisasi rute mitigasi filter bubble akun tersebut akan langsung muncul secara instan tanpa waktu tunggu scraping.
+
+### Kesimpulan:
+Menggunakan integrasi **Streamlit + Apify API Auto-Trigger** jauh lebih *powerful* dan terlihat sangat profesional sebagai luaran proyek (hasil akhir) dibanding meminta user mengunggah CSV secara manual. Ini membuat sistem mitigasi terasa seperti produk aplikasi yang siap pakai!
