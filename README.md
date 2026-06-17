@@ -68,8 +68,8 @@ Kedua arah pencarian ini akan mengekspansi jaringan interaksi sosial (mention gr
 
 ```mermaid
 graph LR
-    S[Source S: User Bubble] -- "Forward Search: f_s(n)" --> n((Bridge Node n))
-    G[Goal G: Neutral Content] -- "Backward Search: f_g(n)" --> n
+    S[Source S: User Bubble] -->|"Forward Search: f_s(n)"| n((Bridge Node n))
+    G[Goal G: Neutral Content] -->|"Backward Search: f_g(n)"| n
     n -->|"h_s(n)"| G
     n -->|"h_g(n)"| S
 ```
