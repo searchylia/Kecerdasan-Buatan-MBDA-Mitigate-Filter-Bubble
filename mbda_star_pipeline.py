@@ -257,11 +257,27 @@ def mbda_star(G, source, goal, max_iter=5000):
     if source not in G or goal not in G:
         return None, float("inf"), 0
 
-    def h(n):       return G.nodes[n].get("h_value", 1.0)
+    # Hitung h_g(n) - jarak kosinus TF-IDF ke profil teks dari source S
+    try:
+        src_idx = user_texts[user_texts["username"] == source].index[0]
+        src_vec = tfidf_matrix[src_idx]
+        sims_to_src = cosine_similarity(tfidf_matrix, src_vec).flatten()
+        h_g_dict = dict(zip(user_texts["username"], 1 - sims_to_src))
+    except Exception as e:
+        h_g_dict = {}
+
+    def h_s(n):     return G.nodes[n].get("h_value", 1.0)
+    def h_g(n):     return h_g_dict.get(n, 1.0)
     def cost(u,v):  return max(0.1, 1.0/(G[u][v].get("weight",1)+1))
 
-    open_f = [(h(source), 0.0, source, [source])]
-    open_b = [(h(goal),   0.0, goal,   [goal])]
+    # Formulasi inisialisasi awal sesuai slide:
+    # fs(S) = g(S,S) + 0.5 * [hs(S) - hg(S)]
+    f_source = 0.5 * (h_s(source) - h_g(source))
+    # fg(G) = g(G,G) + 0.5 * [hg(G) - hs(G)]
+    f_goal = 0.5 * (h_g(goal) - h_s(goal))
+
+    open_f = [(f_source, 0.0, source, [source])]
+    open_b = [(f_goal,   0.0, goal,   [goal])]
     cf, cb = {}, {}
     best = {"cost": float("inf"), "path": None}
     exp  = [0]
@@ -283,7 +299,14 @@ def mbda_star(G, source, goal, max_iter=5000):
         for nb in G.neighbors(cur):
             if nb not in ct:
                 gn = g + cost(cur, nb)
-                heapq.heappush(oq, (gn+h(nb), gn, nb, path+[nb]))
+                # Formulasi Heuristik MBDA* dua arah sesuai slide:
+                # Forward:  fs(n) = g(S,n) + 0.5 * [hs(n) - hg(n)]
+                # Backward: fg(n) = g(G,n) + 0.5 * [hg(n) - hs(n)]
+                if fwd:
+                    fn = gn + 0.5 * (h_s(nb) - h_g(nb))
+                else:
+                    fn = gn + 0.5 * (h_g(nb) - h_s(nb))
+                heapq.heappush(oq, (fn, gn, nb, path+[nb]))
 
     for _ in range(max_iter):
         step(open_f, cf, cb, True)
