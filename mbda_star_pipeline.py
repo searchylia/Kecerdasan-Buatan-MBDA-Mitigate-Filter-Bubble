@@ -237,17 +237,6 @@ print(f"  Nodes: {G.number_of_nodes()} | Edges: {G.number_of_edges()}")
 # STEP 6: COMMUNITY DETECTION (Louvain)
 # ============================================================
 print("STEP 6 — Community Detection (Louvain)")
-G_uu = G.to_undirected()
-isolated = list(nx.isolates(G_uu))
-G_conn = G_uu.copy()
-G_conn.remove_nodes_from(isolated)
-partition = community_louvain.best_partition(
-    G_conn, weight="weight", random_state=42)
-n_clusters = max(partition.values()) + 1
-print(f"  Clusters detected: {n_clusters}")
-nx.set_node_attributes(G, {n: partition.get(n, -1)
-                       for n in G.nodes()}, "cluster")
-
 # ============================================================
 # STEP 7: HEURISTIC h(n) — TF-IDF COSINE SIMILARITY
 # ============================================================
@@ -270,6 +259,21 @@ nx.set_node_attributes(G, {n: h_dict.get(n, 1.0)
                        for n in G.nodes()}, "h_value")
 print(
     f"  h(n) range: [{min(h_dict.values()):.4f}, {max(h_dict.values()):.4f}]")
+
+# ============================================================
+# STEP 6: COMMUNITY DETECTION (Louvain)
+# ============================================================
+print("STEP 6 — Community Detection (Louvain)")
+G_uu = G.to_undirected()
+isolated = list(nx.isolates(G_uu))
+G_conn = G_uu.copy()
+G_conn.remove_nodes_from(isolated)
+partition = community_louvain.best_partition(
+    G_conn, weight="weight", random_state=42)
+n_clusters = max(partition.values()) + 1
+print(f"  Clusters detected: {n_clusters}")
+nx.set_node_attributes(G, {n: partition.get(n, -1)
+                       for n in G.nodes()}, "cluster")
 
 # ============================================================
 # STEP 8: MBDA* EXECUTION
