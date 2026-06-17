@@ -161,5 +161,3 @@ Karena scraping real-time di Apify terkadang membutuhkan waktu tunggu (30–60 d
 * Dosen/penguji dapat memilih dari menu *drop-down* beberapa akun representatif yang sudah ada di database 2.888 akun kita (seperti `________dyah` atau `karirfess`).
 * Hasil visualisasi rute mitigasi filter bubble akun tersebut akan langsung muncul secara instan tanpa waktu tunggu scraping.
 
-### Kesimpulan:
-Menggunakan integrasi **Streamlit + Apify API Auto-Trigger** jauh lebih *powerful* dan terlihat sangat profesional sebagai luaran proyek (hasil akhir) dibanding meminta user mengunggah CSV secara manual. Ini membuat sistem mitigasi terasa seperti produk aplikasi yang siap pakai!
