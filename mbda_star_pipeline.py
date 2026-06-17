@@ -293,9 +293,10 @@ def mbda_star(G, source, goal, max_iter=5000):
             total  = g + g2
             if total < best["cost"]:
                 best["cost"] = total
-                fp = path if fwd else list(reversed(p2))
-                bp = list(reversed(p2)) if fwd else path
-                best["path"] = fp + bp[1:]
+                if fwd:
+                    best["path"] = path + list(reversed(p2))[1:]
+                else:
+                    best["path"] = p2 + list(reversed(path))[1:]
         for nb in G.neighbors(cur):
             if nb not in ct:
                 gn = g + cost(cur, nb)
