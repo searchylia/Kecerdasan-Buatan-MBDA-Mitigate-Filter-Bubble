@@ -1,0 +1,9 @@
+streamlit
+pandas
+numpy
+networkx
+scikit-learn
+python-louvain
+apify-client
+python-dotenv
+matplotlib
