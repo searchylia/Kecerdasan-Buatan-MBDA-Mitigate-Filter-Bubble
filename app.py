@@ -1037,45 +1037,53 @@ if new_username:
 
     # Tab 4: Algorithm Explanation
     with tab4:
-        st.markdown("## 📖 Formulasi Algoritma Modified Bidirectional A* (MBDA*)")
+        st.markdown("## 📖 Formulasi Akademik & Cara Kerja MBDA*")
         st.markdown("""
-        Algoritma **Modified Bidirectional A* (MBDA*)** adalah algoritma pencarian rute pada jejaring sosial (graf sebutan/mention) yang dimodifikasi secara khusus untuk memitigasi **Filter Bubble** (gelembung filter opini politik). 
+        ### **Konsep Dasar Mitigasi Filter Bubble**
+        Algoritma **Modified Bidirectional A* (MBDA*)** merupakan metode pencarian rute dalam jaringan sosial (*mention graph*) yang dirancang khusus untuk memitigasi fenomena **Filter Bubble** (gelembung penyaringan opini). Secara akademis, filter bubble menyebabkan polarisasi informasi karena pengguna hanya terpapar pada konten yang sesuai dengan preferensi mereka. 
         
-        Berbeda dengan A* standar yang mencari jalur terpendek murni berdasarkan jarak graf sosial, MBDA* mengintegrasikan kemiripan konten teks menggunakan vektor TF-IDF. Ini memandu rute agar mengarah ke akun-akun jembatan (*stepping stone*) yang menyeimbangkan konten bias menuju konten netral secara bergradasi.
+        MBDA* memecahkan masalah ini dengan cara tidak hanya mencari jalur terpendek secara relasi sosial (*mention*), melainkan juga memandu pengguna secara bertahap (*stepping stones*) menuju perspektif netral atau berimbang dengan memanfaatkan analisis kesamaan konten berbasis **TF-IDF (Term Frequency-Inverse Document Frequency)**.
+
+        ---
+
+        ### 🧪 **Fungsi Evaluasi Dua Arah (Bidirectional)**
+        Pencarian dilakukan secara simultan dari dua ujung antrean:
+        1. **Pencarian Maju (Forward):** Bergerak dari **Source ($S$)**—akun pengguna yang bias—menuju target.
+        2. **Pencarian Mundur (Backward):** Bergerak dari **Goal ($G$)**—akun penyedia konten netral—menuju pengguna.
         
-        ### 🧪 Fungsi Evaluator Dua Arah
-        Prioritas antrean ekspansi diatur oleh fungsi evaluasi $f(n) = g(n) + h(n)$ yang dirancang khusus untuk masing-masing arah pencarian:
+        Prioritas eksplorasi node ditentukan oleh fungsi evaluasi dinamis $f(n) = g(n) + h(n)$ berikut:
         
-        * **Pencarian Maju / Forward Queue (Source $S \\rightarrow$ Goal $G$):**
+        * **Arah Forward (Source $\\rightarrow$ Goal):**
           $$f_s(n) = g(S,n) + \\frac{1}{2} [ h_s(n) - h_g(n) ]$$
           
-        * **Pencarian Mundur / Backward Queue (Goal $G \\rightarrow$ Source $S$):**
+        * **Arah Backward (Goal $\\rightarrow$ Source):**
           $$f_g(n) = g(G,n) + \\frac{1}{2} [ h_g(n) - h_s(n) ]$$
           
         ---
         
-        ### 📐 Penjelasan Metrik Komponen
+        ### 📐 **Penjelasan Komponen Matematis & Intuisi Akademik**
         
-        1. **Jarak Sosial Terakumulasi ($g(n)$):**
-           Mengukur kedekatan relasi sebutan (*mention*) antar pengguna. Semakin tinggi jumlah retweets dan replies antara akun $u$ dan $v$, semakin dekat jarak sosialnya (biaya/cost mengecil):
+        1. **Metrik Jarak Sosial ($g(n)$) — Aspek Konektivitas Jejaring:**
+           Mengukur kedekatan relasi komunikasi antar-akun dalam graf. Semakin sering akun $u$ menyebut (*mention*) atau membalas tweet akun $v$, semakin kuat ikatan sosial mereka. Secara matematis, biaya (*cost*) interaksi dirumuskan berbanding terbalik dengan bobot hubungan:
            $$cost(u, v) = \\max\\left(0.1, \\frac{1.0}{\\text{weight}(u,v) + 1}\\right)$$
+           *Intuisinya:* Rute rekomendasi diutamakan melewati akun-akun yang terhubung secara riil di dalam jaringan agar transisi informasi terasa natural bagi pengguna.
            
-        2. **Jarak Konten ke Profil Awal ($h_g(n)$):**
-           Estimasi jarak kemiripan teks tweet akumulatif akun $n$ ke profil teks dari **Source** (akun pengguna awal $S$):
+        2. **Jarak Konten ke Profil Awal ($h_g(n)$) — Penolak Polarisasi:**
+           Mengukur tingkat ketidakmiripan konten tweet akun $n$ terhadap konten historis pengguna awal ($S$) menggunakan *Cosine Distance*:
            $$h_g(n) = 1 - \\text{CosineSimilarity}(T_n, T_S)$$
-        
-        3. **Jarak Konten ke Profil Netral ($h_s(n)$):**
-           Estimasi jarak kemiripan teks tweet akumulatif akun $n$ ke teks **Netral/Informatif** (kebijakan pemerintah netral):
+           
+        3. **Jarak Konten ke Profil Netral ($h_s(n)$) — Penarik Netralitas:**
+           Mengukur tingkat ketidakmiripan konten tweet akun $n$ terhadap profil teks acuan netral ($G$):
            $$h_s(n) = 1 - \\text{CosineSimilarity}(T_n, T_{\\text{neutral}})$$
         
         ---
         
-        ### 🛡️ Mengapa MBDA* Efektif Memitigasi Filter Bubble?
-        Formulasi komponen heuristik $[h_s(n) - h_g(n)]$ memberikan dampak berikut saat pencarian maju:
-        * **Mengutamakan Keterbukaan Konten**: Mengarahkan rute ke node yang memiliki jarak konten semakin dekat ke profil netral ($h_s(n)$ bernilai kecil).
-        * **Menjauhi Gelembung Informasi Awal**: Memberikan penalti bagi rute yang tetap berada di dekat profil gelembung bias awal pengguna ($h_g(n)$ bernilai kecil / dikurangkan lebih sedikit).
+        ### 🛡️ **Bagaimana Heuristik MBDA* Memecah Filter Bubble?**
+        Inti inovasi MBDA* terletak pada kombinasi perbedaan heuristik $[h_s(n) - h_g(n)]$ pada pencarian maju:
+        * **Mendorong Keluar dari Bubble ($h_g(n)$ membesar):** Algoritma memberikan penalti pada jalur yang hanya berputar-putar di sekitar opini lama pengguna (ketika kontennya mirip dengan $S$, nilai $h_g(n)$ kecil, sehingga $f_s(n)$ menjadi lebih besar/mahal).
+        * **Menarik ke Arah Netralitas ($h_s(n)$ mengecil):** Algoritma memprioritaskan akun-akun yang kontennya mulai bergeser mendekati topik netral atau berimbang (nilai $h_s(n)$ mengecil, membuat biaya $f_s(n)$ lebih murah).
         
-        Kombinasi ini menghasilkan urutan rekomendasi akun secara bertahap (*stepping stone*) agar pengguna dapat memperluas wawasan opini politik mereka tanpa mengalami lompatan informasi ekstrem yang memicu penolakan psikologis (*backfire effect*).
+        **Kesimpulan Akademis:** Melalui formulasi ini, algoritma menghasilkan rangkaian akun jembatan yang membawa pengguna keluar dari polarisasi informasi secara perlahan (gradual), meminimalkan risiko kejutan konten (*content shock*) yang sering kali menyebabkan penolakan informasi baru oleh pengguna (*backfire effect*).
         """)
 else:
     st.info("👈 Please enter a Twitter/X username in the sidebar and run the analysis, or choose a Demo Account to begin exploration.")
