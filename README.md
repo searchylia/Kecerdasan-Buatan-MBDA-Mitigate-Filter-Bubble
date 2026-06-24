@@ -140,24 +140,35 @@ Berdasarkan pengujian 5 skenario pencarian pada mention network, berikut adalah 
 
 ---
 
-## 6. Rencana Progress Selanjutnya (Next Steps)
+### 6. Aplikasi Dashboard Interaktif (Streamlit + Auto-Scraper)
 
-Pada tahapan progress berikutnya, kami berencana untuk mengembangkan **Aplikasi Dashboard Interaktif (Streamlit + Auto-Scraper)**. Daripada menyuruh pengguna melakukan konfigurasi manual di Apify, kami akan membuat aplikasi berbasis web sederhana menggunakan **Streamlit** (framework Python untuk dashboard interaktif yang sangat mudah dibuat dan estetik) dengan alur kerja otomatis sebagai berikut:
+Aplikasi web interaktif telah dikembangkan menggunakan **Streamlit** untuk memberikan antarmuka pengguna yang mudah digunakan, estetik, dan responsif. Pengguna dapat memilih untuk menjalankan **Live Twitter Scraper** (menggunakan Apify) atau mencoba **Demo Mode** menggunakan akun-akun sampel yang sudah ada dalam database graf.
 
-1. **Input Username Tunggal**
-   Pengguna hanya perlu mengetikkan username Twitter/X mereka (misalnya: `@akun_si_A`) pada kolom input di dashboard.
-2. **Scraping Otomatis di Belakang Layar (Backend Call)**
-   Program Python kita akan memanggil Apify secara otomatis menggunakan library `apify-client` (yang sudah terpasang di `.venv` kita) menggunakan API Key developer yang disimpan aman di file `.env`. Apify Actor akan berjalan di latar belakang untuk mengambil ~50 tweet terakhir dari user tersebut (proses ini berjalan otomatis sekitar 30 detik hingga 1 menit).
-3. **Pemetaan Dinamis ke Graf (Dynamic Insertion)**
-   Tweet dari user tersebut langsung dibersihkan oleh pipeline preprocessing kita. Akun user dimasukkan sebagai simpul (node) baru secara dinamis ke dalam graf 2.888 akun yang sudah ada. Program mengukur nilai heuristik $h_s(user)$ dan $h_g(user)$ menggunakan TF-IDF terhadap kluster opini dominan.
-4. **Dashboard Visualisasi Hasil Mitigasi**
-   Aplikasi Streamlit akan menampilkan:
-   * **Analisis Bias Opini**: Persentase kecondongan opini pengguna saat ini (misalnya: 75% condong ke kluster isu kebijakan A, 25% netral).
-   * **Visualisasi Jalur Rekomendasi**: Peta graf interaktif yang menunjukkan posisi simpul pengguna dan garis tebal rute jembatan (*stepping stone*) menuju konten penyeimbang.
-   * **Daftar Rekomendasi Akun**: Daftar akun jembatan yang harus mereka follow/baca secara bergradasi beserta tweet representatifnya.
+### Fitur Utama:
+1. **Live Twitter Scraper**:
+   - Pengguna memasukkan Apify API Token dan target Username Twitter/X.
+   - Program memanggil Apify Actor secara real-time untuk mengambil 25 tweet terbaru dari user tersebut.
+   - Pipeline data secara dinamis membersihkan teks, menyisipkan akun ke graf mention, dan menghitung skor heuristik $h_s(user)$ terhadap profil netral.
+   - Jika akun tidak terhubung langsung ke jejaring (disconnected), sistem secara cerdas membuat jembatan konten (*content-bridge*) virtual menggunakan kosinus kecocokan TF-IDF tertinggi dalam jaringan LCC.
+2. **Demo Mode (Instant Demo)**:
+   - Pengguna dapat memilih akun demo bawaan (`________dyah`, `Deka_Ajaa`, `karirfess`, `DaudJTP`) atau mencari username lain dalam graf LCC untuk menganalisis jalur rekomendasinya secara instan tanpa menunggu waktu scraping.
+3. **MBDA* Pathfinder**:
+   - Memungkinkan pencarian jalur mitigasi gelembung opini (*bridge recommendation*) ke target netral (`kompascom`), pemerintah (`jokowi`), atau oposisi (`Fahrihamzah`).
+   - Menyajikan daftar akun "stepping stone" beserta konten representatifnya secara terurut.
+4. **Visualisasi Jejaring Mentions**:
+   - Menampilkan peta graf LCC lengkap dengan pewarnaan berdasarkan kluster Louvain dan visualisasi jalur jembatan rekomendasi yang ditandai dengan garis tebal berwarna emas.
 
-### Fitur Tambahan: "Mock/Demo Mode" (Penting untuk Demo Instan)
-Karena scraping real-time di Apify terkadang membutuhkan waktu tunggu (30–60 detik), kita menyediakan opsi **"Demo Mode"** di dashboard:
-* Dosen/penguji dapat memilih dari menu *drop-down* beberapa akun representatif yang sudah ada di database 2.888 akun kita (seperti `________dyah` atau `karirfess`).
-* Hasil visualisasi rute mitigasi filter bubble akun tersebut akan langsung muncul secara instan tanpa waktu tunggu scraping.
-
+### Cara Menjalankan Aplikasi:
+1. Pastikan Anda berada dalam lingkungan virtual environment `.venv`.
+2. Pasang dependensi tambahan jika belum terpasang:
+   ```powershell
+   .venv\Scripts\pip install streamlit apify-client python-dotenv
+   ```
+3. Konfigurasikan token Apify Anda pada file `.env` (salin dari `.env.example`) atau masukkan secara langsung melalui sidebar aplikasi:
+   ```env
+   APIFY_API_TOKEN=isi_token_apify_anda_di_sini
+   ```
+4. Jalankan aplikasi Streamlit:
+   ```powershell
+   .venv\Scripts\streamlit run app.py
+   ```

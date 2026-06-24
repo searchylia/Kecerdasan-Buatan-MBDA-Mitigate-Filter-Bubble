@@ -27,6 +27,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 import community as community_louvain
 
 import sys
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except AttributeError:
+    pass
 
 CSV_PATH = "dataTwitter_1000.csv"
 OUTPUT_GRAPH = "graph.pkl"
@@ -286,7 +290,7 @@ partition_sub = {n: c for n, c in partition.items() if n in G_lcc}
 
 
 def mbda_star(G, source, goal, max_iter=5000):
-    """Modified Bidirectional A* untuk mitigasi filter bubble."""
+    """Modified Bidirectional A* untuk mitigasi filter bubble dengan print log step-by-step."""
     if source not in G or goal not in G:
         return None, float("inf"), 0
 
@@ -315,42 +319,80 @@ def mbda_star(G, source, goal, max_iter=5000):
     best = {"cost": float("inf"), "path": None}
     exp = [0]
 
+    print(f"\n[MBDA* START] Searching path from @{source} to @{goal}")
+    print(f"  Heuristic h_s(start)={h_s(source):.4f}, h_g(start)={h_g(source):.4f}, f_start={f_source:.4f}")
+    print(f"  Heuristic h_s(goal)={h_s(goal):.4f}, h_g(goal)={h_g(goal):.4f}, f_goal={f_goal:.4f}")
+    print("-" * 70)
+
     def step(oq, ct, co, fwd):
         if not oq:
             return
         fe, g, cur, path = heapq.heappop(oq)
         exp[0] += 1
+        direction_str = "Forward (Source -> Goal)" if fwd else "Backward (Goal -> Source)"
+        
+        print(f"\n[Step {exp[0]}] {direction_str} Queue:")
+        print(f"  Popped Node: @{cur}")
+        print(f"    Metrics: f(n)={fe:.4f}, g(n)={g:.4f}, h_s(n)={h_s(cur):.4f}, h_g(n)={h_g(cur):.4f}")
+        
+        if cur.lower() == "jokowi":
+            print("    💡 NOTE: Akun @jokowi dideteksi sebagai jembatan/hub utama. Akun ini mengumpulkan berbagai cluster (baik pro, kontra, maupun netral) sehingga mempermudah koneksi antar bubble.")
+
         if cur in ct:
+            print(f"    * Node @{cur} already visited in this direction. Skipping expansion.")
             return
+            
         ct[cur] = (g, path)
+        
+        # Check collision
         if cur in co:
             g2, p2 = co[cur]
             total = g + g2
+            print(f"    🤝 COLLISION DETECTED at @{cur}!")
+            print(f"      Forward cost to here: {g if fwd else g2:.4f}")
+            print(f"      Backward cost to here: {g2 if fwd else g:.4f}")
+            print(f"      Potential total cost: {total:.4f}")
             if total < best["cost"]:
                 best["cost"] = total
                 if fwd:
                     best["path"] = path + list(reversed(p2))[1:]
                 else:
                     best["path"] = p2 + list(reversed(path))[1:]
+                print(f"      => NEW BEST PATH FOUND! Cost: {best['cost']:.4f}")
+
+        # Expand neighbors
+        print("    Expanding neighbors:")
+        neighbors_count = 0
         for nb in G.neighbors(cur):
-            if nb not in ct:
-                gn = g + cost(cur, nb)
-                # Formulasi Heuristik MBDA* dua arah sesuai slide:
-                # Forward:  fs(n) = g(S,n) + 0.5 * [hs(n) - hg(n)]
-                # Backward: fg(n) = g(G,n) + 0.5 * [hg(n) - hs(n)]
-                if fwd:
-                    fn = gn + 0.5 * (h_s(nb) - h_g(nb))
-                else:
-                    fn = gn + 0.5 * (h_g(nb) - h_s(nb))
-                heapq.heappush(oq, (fn, gn, nb, path+[nb]))
+            neighbors_count += 1
+            if nb in ct:
+                print(f"      -> @{nb}: already visited in closed set. (Skipped)")
+                continue
+            
+            w = G[cur][nb].get("weight", 1)
+            c_edge = cost(cur, nb)
+            gn = g + c_edge
+            
+            if fwd:
+                fn = gn + 0.5 * (h_s(nb) - h_g(nb))
+            else:
+                fn = gn + 0.5 * (h_g(nb) - h_s(nb))
+                
+            print(f"      -> @{nb}: weight={w}, edge_cost={c_edge:.4f}, g_new={gn:.4f}, h_s={h_s(nb):.4f}, h_g={h_g(nb):.4f} => f_new={fn:.4f}")
+            heapq.heappush(oq, (fn, gn, nb, path+[nb]))
+        if neighbors_count == 0:
+            print("      No neighbors to expand.")
 
     for _ in range(max_iter):
         step(open_f, cf, cb, True)
         step(open_b, cb, cf, False)
         if best["path"]:
+            print(f"\n[MBDA* CONVERGED] Path found in {exp[0]} steps.")
             break
         if not open_f and not open_b:
+            print("\n[MBDA* FINISHED] Open queues empty. No path found.")
             break
+            
     return best["path"], best["cost"], exp[0]
 
 
@@ -391,4 +433,7 @@ print("[DONE] Output saved.")
 # ============================================================
 # STEP 9: GRAPH VISUALIZATION (MATPLOTLIB)
 # ============================================================
-run_visualization(G_lcc, partition_sub, results)
+if not (len(sys.argv) > 1 and sys.argv[1] == "--no-vis"):
+    run_visualization(G_lcc, partition_sub, results)
+else:
+    print("Skipping graph visualization plot as requested by --no-vis.")
