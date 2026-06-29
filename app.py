@@ -33,14 +33,9 @@ st.markdown("""
         font-family: 'Outfit', sans-serif;
     }
     
-    .main {
-        background-color: #0f172a;
-        color: #f1f5f9;
-    }
-    
     /* Header styling */
     .app-title {
-        background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-weight: 800;
@@ -48,27 +43,33 @@ st.markdown("""
         margin-bottom: 0.2rem;
     }
     .app-subtitle {
-        color: #94a3b8;
+        color: inherit;
+        opacity: 0.85;
         font-size: 1.1rem;
         margin-bottom: 2rem;
-        font-weight: 300;
+        font-weight: 500;
     }
     
     /* Card design */
     .custom-card {
-        background: rgba(30, 41, 59, 0.7);
+        background: rgba(30, 41, 59, 0.85);
         backdrop-filter: blur(10px);
         border: 1px solid #334155;
         border-radius: 12px;
         padding: 1.5rem;
         margin-bottom: 1rem;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        color: #f1f5f9 !important;
+    }
+    
+    .custom-card p, .custom-card li, .custom-card ul, .custom-card ol {
+        color: #e2e8f0 !important;
     }
     
     .card-title {
         font-size: 1.25rem;
         font-weight: 600;
-        color: #f8fafc;
+        color: #f8fafc !important;
         margin-bottom: 1rem;
         border-bottom: 1px solid #334155;
         padding-bottom: 0.5rem;
@@ -80,7 +81,7 @@ st.markdown("""
         flex-direction: column;
         align-items: center;
         text-align: center;
-        background: rgba(15, 23, 42, 0.6);
+        background: rgba(15, 23, 42, 0.75);
         border-radius: 8px;
         padding: 1rem;
         border: 1px solid #334155;
@@ -89,7 +90,7 @@ st.markdown("""
     .metric-num {
         font-size: 2.2rem;
         font-weight: 700;
-        color: #38bdf8;
+        color: #38bdf8 !important;
         line-height: 1;
         margin-bottom: 0.5rem;
     }
@@ -97,7 +98,7 @@ st.markdown("""
     .metric-lbl {
         font-size: 0.8rem;
         font-weight: 500;
-        color: #94a3b8;
+        color: #cbd5e1 !important;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
@@ -112,6 +113,10 @@ st.markdown("""
         border: 1px solid #334155;
         border-left-width: 4px;
         transition: transform 0.2s ease;
+    }
+    
+    .step-box p {
+        color: #f1f5f9 !important;
     }
     
     .step-box:hover {
@@ -187,7 +192,7 @@ def load_graph_data():
         precomputed_results = final_data["results"]
         return G, G_lcc, partition_sub, precomputed_results
     except Exception as e:
-        st.error(f"Error loading model files (models/graph.pkl / models/mbda_final.pkl): {e}")
+        st.error(f"Gagal memuat file model (models/graph.pkl / models/mbda_final.pkl): {e}")
         return None, None, None, None
 
 @st.cache_data
@@ -229,7 +234,7 @@ def load_tfidf_data():
         
         return vectorizer, tfidf_matrix, user_texts, h_dict, neutral_vec, df
     except Exception as e:
-        st.error(f"Error loading CSV dataset (dataTwitter.csv): {e}")
+        st.error(f"Gagal memuat dataset CSV (data/dataTwitter.csv): {e}")
         return None, None, None, None, None, None
 
 # Precompute/cache spring layout positions for stable rendering
@@ -579,7 +584,7 @@ def render_graph_path(G, partition_sub, path, source, goal, base_positions, new_
             tc = '#0f172a' if is_endpoint else '#f8fafc'
             fw = 'bold' if is_endpoint else 'normal'
             
-            ax.text(coord[0], coord[1], f"@{node}" if node != new_username else f"@{node} (YOU)", 
+            ax.text(coord[0], coord[1], f"@{node}" if node != new_username else f"@{node} (ANDA)", 
                     fontsize=8, fontweight=fw, color=tc,
                     horizontalalignment='center',
                     bbox=dict(facecolor=bg, alpha=0.95, edgecolor='#475569', boxstyle='round,pad=0.2'))
@@ -601,14 +606,14 @@ base_positions = get_base_layout(G_lcc) if G_lcc is not None else None
 cluster_profiles = get_cluster_profiles(df_raw, partition_sub) if df_raw is not None and partition_sub is not None else None
 
 # Header Title
-st.markdown('<div class="app-title">Mitigate Filter Bubble Dashboard</div>', unsafe_allow_html=True)
-st.markdown('<div class="app-subtitle">Visualizing social bridge optimization path using Modified Bidirectional A* (MBDA*) algorithm</div>', unsafe_allow_html=True)
+st.markdown('<div class="app-title">Dashboard Mitigasi Filter Bubble</div>', unsafe_allow_html=True)
+st.markdown('<div class="app-subtitle">Visualisasi jalur optimasi jembatan sosial menggunakan algoritma Modified Bidirectional A* (MBDA*)</div>', unsafe_allow_html=True)
 
 # Sidebar setup
-st.sidebar.title("🛠️ Configuration")
+st.sidebar.title("🛠️ Konfigurasi")
 
 # Option selection
-mode = st.sidebar.radio("Choose Mode:", ["Demo Mode (Precomputed)", "Live Twitter Scraper (Apify)"])
+mode = st.sidebar.radio("Pilih Mode:", ["Mode Demo (Data Tersedia)", "Scraper Twitter Live (Apify)"])
 
 # Shared parameters for new dynamic runs
 dynamic_running = False
@@ -621,29 +626,29 @@ connected_type = None
 active_G = G_lcc
 active_partition = partition_sub
 
-if mode == "Live Twitter Scraper (Apify)":
-    st.sidebar.markdown("### Apify Settings")
+if mode == "Scraper Twitter Live (Apify)":
+    st.sidebar.markdown("### Pengaturan Apify")
     default_token = os.getenv("APIFY_API_TOKEN", "")
-    api_token = st.sidebar.text_input("Apify API Token", value=default_token, type="password", help="Get it from console.apify.com")
+    api_token = st.sidebar.text_input("Token API Apify", value=default_token, type="password", help="Dapatkan dari console.apify.com")
     
-    st.sidebar.markdown("### Scrape Target")
-    username_input = st.sidebar.text_input("Twitter/X Username", placeholder="e.g. jokowi")
-    tweets_count = st.sidebar.slider("Number of tweets to scrape", 10, 100, 25)
+    st.sidebar.markdown("### Target Scrape")
+    username_input = st.sidebar.text_input("Username Twitter/X", placeholder="misal: jokowi")
+    tweets_count = st.sidebar.slider("Jumlah tweet yang di-scrape", 10, 100, 25)
     
-    if st.sidebar.button("Fetch & Insert User"):
+    if st.sidebar.button("Ambil & Masukkan Akun"):
         if not api_token:
-            st.sidebar.error("Error: Apify API token is required!")
+            st.sidebar.error("Error: Token API Apify diperlukan!")
         elif not username_input:
-            st.sidebar.error("Error: Twitter Username is required!")
+            st.sidebar.error("Error: Username Twitter diperlukan!")
         else:
-            with st.spinner(f"Scraping recent tweets for @{username_input} via Apify (usually takes 30-45s)..."):
+            with st.spinner(f"Mengambil tweet terbaru @{username_input} via Apify (memakan waktu 30-45 detik)..."):
                 items, err = scrape_twitter_user(username_input, api_token, tweets_count)
                 if err:
-                    st.error(f"Scraping failed: {err}")
+                    st.error(f"Gagal melakukan scraping: {err}")
                 elif not items:
-                    st.warning(f"No tweets found or scraped for @{username_input}. Please ensure the profile is public and has posts.")
+                    st.warning(f"Tidak ada tweet ditemukan untuk @{username_input}. Pastikan akun bersifat publik dan memiliki postingan.")
                 else:
-                    st.sidebar.success(f"Successfully scraped {len(items)} tweets!")
+                    st.sidebar.success(f"Berhasil mengambil {len(items)} tweet!")
                     st.session_state["scraped_tweets"] = items
                     st.session_state["target_username"] = username_input
                     
@@ -652,7 +657,7 @@ if mode == "Live Twitter Scraper (Apify)":
         scraped_tweets = st.session_state["scraped_tweets"]
         new_username = st.session_state["target_username"]
         
-        with st.spinner("Aligning user into network graph..."):
+        with st.spinner("Menyelaraskan akun ke dalam graf jaringan..."):
             active_G, active_partition, new_username, new_user_vec, connected_type = integrate_new_user(
                 new_username, scraped_tweets, G_lcc, partition_sub, 
                 vectorizer, tfidf_matrix, user_texts, h_dict, neutral_vec
@@ -661,21 +666,21 @@ if mode == "Live Twitter Scraper (Apify)":
 
 else:
     # Demo Mode Setup
-    st.sidebar.markdown("### Demo Account Selection")
+    st.sidebar.markdown("### Pilih Akun Demo")
     demo_accounts = {
         "________dyah (Cluster 2 - Bubble MBG)": "________dyah",
         "Deka_Ajaa (Cluster 2 - Pro-Prabowo)": "Deka_Ajaa",
-        "karirfess (Cluster 0 - Karirfess/Job seekers)": "karirfess",
-        "DaudJTP (Cluster 1 - Neutral/Media)": "DaudJTP"
+        "karirfess (Cluster 0 - Karirfess/Pencari Kerja)": "karirfess",
+        "DaudJTP (Cluster 1 - Netral/Media)": "DaudJTP"
     }
     
     # Add other LCC nodes as custom choice
-    custom_choice = st.sidebar.checkbox("Choose custom user from network database")
+    custom_choice = st.sidebar.checkbox("Pilih akun kustom dari database jaringan")
     if custom_choice:
         node_list = sorted(list(G_lcc.nodes()))
-        selected_username = st.sidebar.selectbox("Select Account from LCC", node_list)
+        selected_username = st.sidebar.selectbox("Pilih Akun dari LCC", node_list)
     else:
-        choice = st.sidebar.selectbox("Select Demo Account", list(demo_accounts.keys()))
+        choice = st.sidebar.selectbox("Pilih Akun Demo", list(demo_accounts.keys()))
         selected_username = demo_accounts[choice]
         
     st.session_state["demo_user"] = selected_username
@@ -685,15 +690,15 @@ else:
 if new_username:
     # Tabs
     tab1, tab2, tab3, tab4 = st.tabs([
-        "👤 Account Profiling", 
-        "🗺️ MBDA* Pathfinder", 
-        "🕸️ Graph Visualization",
-        "ℹ️ Algorithm Explanation"
+        "👤 Profil Akun", 
+        "🗺️ Pencari Rute MBDA*", 
+        "🕸️ Visualisasi Graf",
+        "ℹ️ Penjelasan Algoritma"
     ])
     
     # Tab 1: Account Profiling
     with tab1:
-        st.markdown(f"## Account Profile: `@{new_username}`")
+        st.markdown(f"## Profil Akun: `@{new_username}`")
         
         # Display meta values
         col1, col2, col3 = st.columns(3)
@@ -703,9 +708,9 @@ if new_username:
         with col1:
             st.markdown(f"""
             <div class="custom-card">
-                <div class="card-title">Community Cluster</div>
-                <div class="metric-num">#{cluster_id if cluster_id != -1 else 'Isolated'}</div>
-                <div class="metric-lbl">Louvain Group ID</div>
+                <div class="card-title">Kelompok Komunitas (Cluster)</div>
+                <div class="metric-num">#{cluster_id if cluster_id != -1 else 'Terisolasi'}</div>
+                <div class="metric-lbl">ID Grup Louvain</div>
             </div>
             """, unsafe_allow_html=True)
             
@@ -720,9 +725,9 @@ if new_username:
             
             st.markdown(f"""
             <div class="custom-card">
-                <div class="card-title">Content Similarity to Neutral Profile</div>
+                <div class="card-title">Kemiripan Konten dengan Profil Netral</div>
                 <div class="metric-num">{bias_percent}%</div>
-                <div class="metric-lbl">TF-IDF Similarity</div>
+                <div class="metric-lbl">Kemiripan TF-IDF</div>
             </div>
             """, unsafe_allow_html=True)
             
@@ -734,9 +739,9 @@ if new_username:
                 
             st.markdown(f"""
             <div class="custom-card">
-                <div class="card-title">Analysis Volume</div>
+                <div class="card-title">Volume Analisis</div>
                 <div class="metric-num">{tweets_len}</div>
-                <div class="metric-lbl">Tweets Analyzed</div>
+                <div class="metric-lbl">Tweet Dianalisis</div>
             </div>
             """, unsafe_allow_html=True)
             
@@ -744,10 +749,10 @@ if new_username:
         if cluster_id in cluster_profiles:
             st.markdown(f"""
             <div class="custom-card">
-                <div class="card-title">Cluster Profile (Political Bubble context)</div>
-                <p><strong>Top Hashtags used in this cluster:</strong> <span style="color:#a855f7;">{cluster_profiles[cluster_id]['top_hashtags']}</span></p>
-                <p><strong>Top Accounts mentioned in this cluster:</strong> <span style="color:#6366f1;">{cluster_profiles[cluster_id]['top_mentions']}</span></p>
-                <p><strong>Typical Topics/Arguments:</strong></p>
+                <div class="card-title">Profil Cluster (Konteks Filter Bubble)</div>
+                <p><strong>Hashtag Teratas di Cluster Ini:</strong> <span style="color:#f0abfc; font-weight:600;">{cluster_profiles[cluster_id]['top_hashtags']}</span></p>
+                <p><strong>Akun yang Paling Sering Disebut (Mention):</strong> <span style="color:#38bdf8; font-weight:600;">{cluster_profiles[cluster_id]['top_mentions']}</span></p>
+                <p><strong>Topik/Argumen Umum:</strong></p>
                 <ul>
                     {"".join([f"<li><i>{t}</i></li>" for t in cluster_profiles[cluster_id]['sample_tweets'][:2]])}
                 </ul>
@@ -755,14 +760,14 @@ if new_username:
             """, unsafe_allow_html=True)
             
         # Scraped tweets view
-        st.subheader("Recent Tweets Analyzed")
+        st.subheader("Tweet Terbaru yang Dianalisis")
         if dynamic_running and scraped_tweets:
             for t in scraped_tweets[:10]:
                 created = t.get("createdAt", "")
                 text = t.get("text", "")
                 st.markdown(f"""
                 <div class="step-box" style="border-left-color: #ec4899;">
-                    <span style="color: #64748b; font-size: 0.8rem;">{created}</span>
+                    <span style="color: #94a3b8; font-size: 0.8rem;">{created}</span>
                     <p style="margin: 0.3rem 0 0 0; color: #f1f5f9;">{text}</p>
                 </div>
                 """, unsafe_allow_html=True)
@@ -772,33 +777,33 @@ if new_username:
                 for _, row in user_raw.head(10).iterrows():
                     st.markdown(f"""
                     <div class="step-box" style="border-left-color: #ec4899;">
-                        <span style="color: #64748b; font-size: 0.8rem;">{row['createdAt']}</span>
+                        <span style="color: #94a3b8; font-size: 0.8rem;">{row['createdAt']}</span>
                         <p style="margin: 0.3rem 0 0 0; color: #f1f5f9;">{row['text']}</p>
                     </div>
                     """, unsafe_allow_html=True)
             else:
-                st.info("No text content available in the local database for this user.")
+                st.info("Tidak ada konten teks yang tersedia di database lokal untuk akun ini.")
 
     # Tab 2: MBDA* Pathfinder
     with tab2:
-        st.markdown("## 🗺️ Bridge Path Finder (Mitigating Filter Bubble)")
-        st.write("MBDA* calculates a path through the network of mentions, choosing nodes that gradually connect the starting profile to a target node. The objective is to guide the user from their current political/social cluster to neutral information or other perspective clusters without sudden content shocks.")
+        st.markdown("## 🗺️ Pencari Rute Jembatan (Mitigasi Filter Bubble)")
+        st.write("MBDA* menghitung jalur melalui jaringan mention, memilih node yang secara bertahap menghubungkan profil awal ke akun target. Tujuannya adalah memandu pengguna dari cluster politik/sosial mereka saat ini menuju informasi netral atau perspektif lain tanpa kejutan konten secara drastis.")
         
         # Path Goal Selector
-        st.markdown("### Choose Target/Goal Node")
+        st.markdown("### Pilih Node Target / Tujuan")
         goals = {
-            "kompascom (Cluster 1 — Neutral Media/Informative)": "kompascom",
-            "jokowi (Cluster 2 — Pro-establishment/Government)": "jokowi",
-            "Fahrihamzah (Cluster 5 — Critical/Opposition)": "Fahrihamzah"
+            "kompascom (Cluster 1 — Media Netral/Informatif)": "kompascom",
+            "jokowi (Cluster 2 — Pro-Pemerintah)": "jokowi",
+            "Fahrihamzah (Cluster 5 — Kritis/Oposisi)": "Fahrihamzah"
         }
         
         goal_labels = list(goals.keys())
-        selected_goal_label = st.selectbox("Select Target Account:", goal_labels)
+        selected_goal_label = st.selectbox("Pilih Akun Target:", goal_labels)
         goal_username = goals[selected_goal_label]
         
         # Run MBDA* Button
-        if st.button("Run MBDA* Path Search"):
-            with st.spinner("Finding optimal path through social graph..."):
+        if st.button("Jalankan Pencarian Rute MBDA*"):
+            with st.spinner("Mencari jalur optimal melalui graf sosial..."):
                 path, cost_val, explored, trace = run_mbda_star(
                     active_G, new_username, goal_username, 
                     user_texts, tfidf_matrix, vectorizer, 
@@ -816,9 +821,9 @@ if new_username:
                         "source": new_username,
                         "goal": goal_username
                     }
-                    st.success("Path found successfully!")
+                    st.success("Jalur berhasil ditemukan!")
                 else:
-                    st.error("No path could be found. The starting node and target node belong to completely separate graph components.")
+                    st.error("Jalur tidak ditemukan. Node awal dan target berada pada komponen graf yang benar-benar terpisah.")
                     
         # Render Path Results
         if "path_results" in st.session_state and st.session_state["path_results"]["source"] == new_username and st.session_state["path_results"]["goal"] == goal_username:
@@ -831,14 +836,14 @@ if new_username:
             # Metrics
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Bridge Steps (Nodes)", len(path))
+                st.metric("Langkah Jembatan (Node)", len(path))
             with col2:
-                st.metric("Total Heuristic Cost", f"{cost_val:.4f}")
+                st.metric("Total Biaya Heuristik", f"{cost_val:.4f}")
             with col3:
                 # Diversity score: unique clusters visited / total nodes in path
                 path_cl = [active_partition.get(n, -1) for n in path]
                 diversity = len(set(c for c in path_cl if c != -1)) / len(path)
-                st.metric("Path Diversity Index", f"{diversity:.3f}")
+                st.metric("Indeks Keragaman Jalur", f"{diversity:.3f}")
             
             # --- NEW STEP-BY-STEP ALGORITHM PROGRESSION TRACE ---
             st.write("---")
@@ -862,7 +867,7 @@ if new_username:
                 collision = selected_step["collision_detected"]
                 
                 dir_color = "#3b82f6" if direction == "Forward" else "#ec4899"
-                dir_text = "Forward Queue (Source ➔ Goal)" if direction == "Forward" else "Backward Queue (Goal ➔ Source)"
+                dir_text = "Antrean Forward (Source ➔ Goal)" if direction == "Forward" else "Antrean Backward (Goal ➔ Source)"
                 
                 col_left, col_right = st.columns([1, 2])
                 
@@ -883,24 +888,24 @@ if new_username:
                 with col_right:
                     st.markdown(f"""
                     <div class="custom-card" style="margin-top: 10px;">
-                        <div class="card-title" style="font-size: 1.0rem; margin-bottom: 5px; padding-bottom: 3px;">Heuristic Evaluation details for @{node_popped}</div>
+                        <div class="card-title" style="font-size: 1.0rem; margin-bottom: 5px; padding-bottom: 3px;">Detail Evaluasi Heuristik untuk @{node_popped}</div>
                         <div style="font-size: 0.8rem; color: #94a3b8; font-style: italic; margin-bottom: 10px;">Formula: f(n) = g(n) + 0.5 * (h_s(n) - h_g(n)) [Fwd] / g(n) + 0.5 * (h_g(n) - h_s(n)) [Bwd]</div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;">
                             <div style="background: rgba(15,23,42,0.5); padding: 8px; border-radius: 6px; border: 1px solid #334155;">
                                 <div style="font-size: 1.2rem; font-weight:700; color: #38bdf8;">{f_val:.4f}</div>
-                                <div style="font-size: 0.7rem; color: #94a3b8;">f(n) Priority</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;">Prioritas f(n)</div>
                             </div>
                             <div style="background: rgba(15,23,42,0.5); padding: 8px; border-radius: 6px; border: 1px solid #334155;">
                                 <div style="font-size: 1.2rem; font-weight:700; color: #818cf8;">{g_val:.4f}</div>
-                                <div style="font-size: 0.7rem; color: #94a3b8;">g(n) Social Dist.</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;">Jarak Sosial g(n)</div>
                             </div>
                             <div style="background: rgba(15,23,42,0.5); padding: 8px; border-radius: 6px; border: 1px solid #334155;">
                                 <div style="font-size: 1.2rem; font-weight:700; color: #a855f7;">{h_s_val:.4f}</div>
-                                <div style="font-size: 0.7rem; color: #94a3b8;">h_s(n) Neutral</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;">Netral h_s(n)</div>
                             </div>
                             <div style="background: rgba(15,23,42,0.5); padding: 8px; border-radius: 6px; border: 1px solid #334155;">
                                 <div style="font-size: 1.2rem; font-weight:700; color: #e11d48;">{h_g_val:.4f}</div>
-                                <div style="font-size: 0.7rem; color: #94a3b8;">h_g(n) Source</div>
+                                <div style="font-size: 0.7rem; color: #94a3b8;">Asal h_g(n)</div>
                             </div>
                         </div>
                     </div>
@@ -968,7 +973,7 @@ if new_username:
             
             st.write("---")
             # Sequential Path display
-            st.subheader("💡 Stepping Stone Recommendations")
+            st.subheader("💡 Rekomendasi Akun Jembatan (Stepping Stones)")
             st.write("Kami merekomendasikan pengguna untuk mengikuti atau berinteraksi dengan akun-akun berikut secara bertahap untuk mendiversifikasi lini masa secara aman:")
             
             for idx, node in enumerate(path):
@@ -995,11 +1000,11 @@ if new_username:
                 st.markdown(f"""
                 <div class="step-box">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="step-index">Step {idx + 1}</span>
+                        <span class="step-index">Langkah {idx + 1}</span>
                         <span style="font-weight: 700;">@{node}</span>
                         <div>{badge}</div>
                     </div>
-                    {f'<div class="step-tweet"><b>Representative Post:</b> "{top_tweet}"</div>' if top_tweet else ''}
+                    {f'<div class="step-tweet"><b>Contoh Postingan Representatif:</b> "{top_tweet}"</div>' if top_tweet else ''}
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -1013,15 +1018,15 @@ if new_username:
                 
     # Tab 3: Graph Visualization
     with tab3:
-        st.markdown("## 🕸️ Mention Network Mapping")
-        st.write("The interactive mention network layout of the Largest Connected Component. The path found by MBDA* is highlighted in gold.")
+        st.markdown("## 🕸️ Peta Jaringan Mention")
+        st.write("Tata letak jaringan mention interaktif dari Komponen Terhubung Terbesar (LCC). Jalur yang ditemukan oleh algoritma MBDA* disorot dengan warna emas.")
         
         if "path_results" in st.session_state and st.session_state["path_results"]["source"] == new_username:
             res = st.session_state["path_results"]
             path = res["path"]
             goal = res["goal"]
             
-            with st.spinner("Generating network plot..."):
+            with st.spinner("Membuat plot visualisasi jaringan..."):
                 fig = render_graph_path(
                     active_G, active_partition, path, 
                     new_username, goal, base_positions, 
@@ -1030,10 +1035,10 @@ if new_username:
                 st.pyplot(fig)
         else:
             # Draw standard LCC graph highlighting nothing
-            with st.spinner("Generating base network plot..."):
+            with st.spinner("Membuat plot dasar jaringan..."):
                 fig = render_graph_path(active_G, active_partition, [], new_username, "", base_positions)
                 st.pyplot(fig)
-                st.caption("Run path finder on Tab 2 to highlight path.")
+                st.caption("Jalankan pencari rute di Tab 2 untuk menyorot jalur pada graf.")
 
     # Tab 4: Algorithm Explanation
     with tab4:
@@ -1086,4 +1091,4 @@ if new_username:
         **Kesimpulan Akademis:** Melalui formulasi ini, algoritma menghasilkan rangkaian akun jembatan yang membawa pengguna keluar dari polarisasi informasi secara perlahan (gradual), meminimalkan risiko kejutan konten (*content shock*) yang sering kali menyebabkan penolakan informasi baru oleh pengguna (*backfire effect*).
         """)
 else:
-    st.info("👈 Please enter a Twitter/X username in the sidebar and run the analysis, or choose a Demo Account to begin exploration.")
+    st.info("👈 Silakan masukkan username Twitter/X di panel samping (sidebar) dan jalankan analisis, atau pilih Akun Demo untuk mulai bereksplorasi.")
