@@ -14,7 +14,7 @@ Kami melakukan pengambilan data dari Twitter (X) menggunakan platform **Apify** 
 * **Volume Data**:
   * Batas pengambilan diset sebanyak **1.000 tweet per kata kunci**.
   * Total data mentah terkumpul: **3.000 tweet**.
-  * Data tersebut disimpan dalam file CSV resmi: [dataTwitter_1000.csv](file:///c:/scrapperTwitterX/dataTwitter_1000.csv).
+  * Data tersebut disimpan dalam file CSV resmi: [dataTwitter.csv](file:///c:/scrapperTwitterX/dataTwitter.csv).
 
 ---
 
@@ -178,7 +178,7 @@ Kami melakukan pengambilan data dari Twitter (X) menggunakan platform **Apify** 
 * **Volume Data**:
   * Batas pengambilan diset sebanyak **1.000 tweet per kata kunci**.
   * Total data mentah terkumpul: **3.000 tweet**.
-  * Data tersebut disimpan dalam file CSV resmi: [dataTwitter_1000.csv](file:///c:/scrapperTwitterX/dataTwitter_1000.csv).
+  * Data tersebut disimpan dalam file CSV resmi: [dataTwitter.csv](file:///c:/scrapperTwitterX/dataTwitter.csv).
 
 ---
 

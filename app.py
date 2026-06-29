@@ -177,9 +177,9 @@ def normalize_text(text):
 @st.cache_resource
 def load_graph_data():
     try:
-        with open("graph.pkl", "rb") as f:
+        with open("models/graph.pkl", "rb") as f:
             G = pickle.load(f)
-        with open("mbda_final.pkl", "rb") as f:
+        with open("models/mbda_final.pkl", "rb") as f:
             final_data = pickle.load(f)
         
         G_lcc = final_data["G_lcc"]
@@ -187,13 +187,13 @@ def load_graph_data():
         precomputed_results = final_data["results"]
         return G, G_lcc, partition_sub, precomputed_results
     except Exception as e:
-        st.error(f"Error loading model files (graph.pkl / mbda_final.pkl): {e}")
+        st.error(f"Error loading model files (models/graph.pkl / models/mbda_final.pkl): {e}")
         return None, None, None, None
 
 @st.cache_data
 def load_tfidf_data():
     try:
-        df = pd.read_csv("dataTwitter_1000.csv")
+        df = pd.read_csv("data/dataTwitter.csv")
         df.drop_duplicates(subset="id", inplace=True)
         df.reset_index(drop=True, inplace=True)
         
@@ -229,7 +229,7 @@ def load_tfidf_data():
         
         return vectorizer, tfidf_matrix, user_texts, h_dict, neutral_vec, df
     except Exception as e:
-        st.error(f"Error loading CSV dataset (dataTwitter_1000.csv): {e}")
+        st.error(f"Error loading CSV dataset (dataTwitter.csv): {e}")
         return None, None, None, None, None, None
 
 # Precompute/cache spring layout positions for stable rendering
