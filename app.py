@@ -1043,6 +1043,24 @@ if new_username:
                 fig = render_graph_path(active_G, active_partition, [], new_username, "", base_positions)
                 st.pyplot(fig)
                 st.caption("Jalankan pencari rute di Tab 2 untuk menyorot jalur pada graf.")
+        
+        # Panduan Membaca Peta Jaringan (Legend & Mapping Explanation)
+        st.write("---")
+        st.subheader("🗺️ Panduan Membaca Peta Jaringan (Graf)")
+        col_lg1, col_lg2 = st.columns(2)
+        with col_lg1:
+            st.markdown("""
+            **Komponen Visual Graf:**
+            - 🟢 **Warna-warni Simpul (Node Colors)**: Menunjukkan pengelompokan komunitas (*Filter Bubble*) berdasarkan algoritma Louvain. Anggota di dalam kluster yang sama sangat sering saling menyebut (*mention*), mengindikasikan ruang opini yang serupa. Di bagian tengah graf tempat berbagai warna bercampur, terdapat akun-akun hub (seperti `@prabowo`) yang menerima sebutan lintas kluster secara masif.
+            - ▲ **Segitiga Kuning (Yellow Triangle)**: Menunjukkan titik mulai (*Source*) pencarian rute, yaitu akun pengguna yang terperangkap dalam kluster *filter bubble*.
+            - ■ **Kotak Cyan (Cyan Square)**: Menunjukkan titik tujuan (*Goal*), yaitu akun target yang bermuatan konten netral/alternatif.
+            """)
+        with col_lg2:
+            st.markdown("""
+            **Mekanisme Jembatan Sosial:**
+            - 🌟 **Garis Tebal Emas (Glowing Gold Path)**: Merupakan rute transisi bertahap (*stepping stones*) yang direkomendasikan oleh algoritma MBDA* untuk mendiversifikasi konten pengguna secara perlahan.
+            - ⏳ **Pola Penyempitan Rute (Path Bottleneck)**: Jika Anda mencoba beberapa skenario pencarian rute, sebagian besar jalur solusi akan "menyempit" melewati satu atau dua simpul hub sentral (seperti `@prabowo` dan `@faridj_pm`) sebelum melebar kembali ke arah tujuan masing-masing. Hub nasional ini bertindak sebagai jembatan alami lintas opini.
+            """)
 
     # Tab 4: Algorithm Explanation
     with tab4:
@@ -1093,6 +1111,66 @@ if new_username:
         * **Menarik ke Arah Netralitas ($h_s(n)$ mengecil):** Algoritma memprioritaskan akun-akun yang kontennya mulai bergeser mendekati topik netral atau berimbang (nilai $h_s(n)$ mengecil, membuat biaya $f_s(n)$ lebih murah).
         
         **Kesimpulan Akademis:** Melalui formulasi ini, algoritma menghasilkan rangkaian akun jembatan yang membawa pengguna keluar dari polarisasi informasi secara perlahan (gradual), meminimalkan risiko kejutan konten (*content shock*) yang sering kali menyebabkan penolakan informasi baru oleh pengguna (*backfire effect*).
+        """)
+        
+        st.write("---")
+        st.subheader("🔍 Studi Kasus Detail: Skenario 3 (@Deka_Ajaa ➔ @Fahrihamzah)")
+        st.write("""
+        Untuk memahami cara kerja algoritma secara konkret, mari kita tinjau skenario pencarian rute dari akun **@Deka_Ajaa** (Source) menuju akun **@Fahrihamzah** (Goal). Rute ini merupakan studi kasus ideal karena memiliki lintasan yang pendek (hanya melewati 4 akun), biaya sosial terendah, serta tingkat keberagaman kluster yang tinggi.
+        """)
+        
+        st.markdown("""
+        <table style="width:100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px;">
+            <thead>
+                <tr style="background-color: #1e293b; border-bottom: 2px solid #475569;">
+                    <th style="padding: 10px; text-align: left; color: #f8fafc;">Nama Node</th>
+                    <th style="padding: 10px; text-align: left; color: #f8fafc;">Peran Struktural dalam Graf</th>
+                    <th style="padding: 10px; text-align: left; color: #f8fafc;">Mengapa Terpilih dalam Rute?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid #334155;">
+                    <td style="padding: 10px; font-weight: 600; color: #fbbf24;">@Deka_Ajaa</td>
+                    <td style="padding: 10px; color: #cbd5e1;"><b>Source (Titik Awal)</b> - Akun di dalam filter bubble pendukung pemerintah (MBG).</td>
+                    <td style="padding: 10px; color: #e2e8f0;">Merupakan akun pengguna awal yang akan "dikeluarkan" dari gelembung informasi tertutupnya.</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #334155;">
+                    <td style="padding: 10px; font-weight: 600; color: #38bdf8;">@prabowo</td>
+                    <td style="padding: 10px; color: #cbd5e1;"><b>Hub Nasional (In-Degree tertinggi: 359)</b> - Figur sentral yang sering disebut oleh semua kluster.</td>
+                    <td style="padding: 10px; color: #e2e8f0;">Karena disebut oleh pendukung, oposisi, maupun netral, simpul ini menjadi jalan pintas tercepat (collision point) untuk menghubungkan kedua arah pencarian.</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #334155;">
+                    <td style="padding: 10px; font-weight: 600; color: #c084fc;">@faridj_pm</td>
+                    <td style="padding: 10px; color: #cbd5e1;"><b>Akun Jembatan Aktif (Out-Degree tertinggi: 56)</b> - Akun yang aktif me-mention ke berbagai arah.</td>
+                    <td style="padding: 10px; color: #e2e8f0;">Memiliki hubungan interaksi langsung ke arah kluster oposisi tempat @Fahrihamzah berada, bertindak sebagai penghubung keluar.</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #334155;">
+                    <td style="padding: 10px; font-weight: 600; color: #22d3ee;">@Fahrihamzah</td>
+                    <td style="padding: 10px; color: #cbd5e1;"><b>Goal (Titik Tujuan)</b> - Akun di dalam kluster oposisi/kritis terhadap topik yang sama.</td>
+                    <td style="padding: 10px; color: #e2e8f0;">Menjadi target paparan opini alternatif guna menyeimbangkan sudut pandang informasi pengguna.</td>
+                </tr>
+            </tbody>
+        </table>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("""
+        ### **Alur Pencarian Jalur MBDA\\* Langkah-demi-Langkah:**
+        
+        * **Langkah 0 — Inisialisasi Awal (Dua Arah):**
+          * Pencarian dimulai dari dua arah secara bersamaan. Antrean **Forward** berawal dari `@Deka_Ajaa` (Source), sedangkan antrean **Backward** berawal dari `@Fahrihamzah` (Goal).
+          * Kedua antrean menghitung nilai prioritas awal $f(n)$ masing-masing berdasarkan rumus heuristik selisih konten terhadap profil target masing-masing.
+          
+        * **Langkah 1 — Ekspansi Bergantian melalui Jaringan Mention:**
+          * **Dari Sisi Forward**: Node `@Deka_Ajaa` dibuka (*popped*), tetangganya di jaringan dianalisis. Akun dengan bobot mention tinggi dan konten yang mulai mendekati topik netral mendapatkan prioritas lebih tinggi untuk masuk antrean.
+          * **Dari Sisi Backward**: Node `@Fahrihamzah` dibuka, tetangga-tetangganya dievaluasi dengan logika kebalikan (mencari akun yang arah kontennya mendekati profil bubble asal agar rute bergradasi).
+          
+        * **Langkah 2 — Pertemuan di Simpul Jembatan (`@prabowo`):**
+          * Karena `@prabowo` adalah figur nasional sentral yang sering di-mention oleh kluster pendukung maupun oposisi (in-degree tertinggi: 359), simpul ini diekspansi secara cepat oleh antrean maju dan antrean mundur.
+          * Terjadi **Collision (Titik Temu)** ketika antrean maju dan antrean mundur menyentuh `@prabowo` di saat bersamaan. Titik temu inilah yang menjembatani jurang polarisasi informasi.
+          
+        * **Langkah 3 — Penyambungan Jalur Akhir:**
+          * Jalur hasil pencarian maju (`@Deka_Ajaa ➔ @prabowo`) disambungkan dengan jalur hasil pencarian mundur yang dibalik (`@prabowo ➔ @faridj_pm ➔ @Fahrihamzah`).
+          * Hasilnya adalah lintasan rekomendasi bertahap: **@Deka_Ajaa ➔ @prabowo ➔ @faridj_pm ➔ @Fahrihamzah** dengan biaya transisi yang sangat murah (Cost = 0.3000) dan keragaman kluster optimal (0.750).
         """)
 else:
     st.info("👈 Silakan masukkan username Twitter/X di panel samping (sidebar) dan jalankan analisis, atau pilih Akun Demo untuk mulai bereksplorasi.")
