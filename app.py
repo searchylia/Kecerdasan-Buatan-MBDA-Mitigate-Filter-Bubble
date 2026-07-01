@@ -1172,5 +1172,82 @@ if new_username:
           * Jalur hasil pencarian maju (`@Deka_Ajaa ➔ @prabowo`) disambungkan dengan jalur hasil pencarian mundur yang dibalik (`@prabowo ➔ @faridj_pm ➔ @Fahrihamzah`).
           * Hasilnya adalah lintasan rekomendasi bertahap: **@Deka_Ajaa ➔ @prabowo ➔ @faridj_pm ➔ @Fahrihamzah** dengan biaya transisi yang sangat murah (Cost = 0.3000) dan keragaman kluster optimal (0.750).
         """)
+        
+        # --- DYNAMIC ACTIVE ROUTE ANALYSIS ---
+        if "path_results" in st.session_state:
+            res = st.session_state["path_results"]
+            path = res["path"]
+            cost_val = res["cost"]
+            source = res["source"]
+            goal = res["goal"]
+            
+            # Recompute h_g_dict on the fly for the active source to display h_g metrics
+            h_g_dict = {}
+            try:
+                if source == new_username and new_user_vec is not None:
+                    src_vec = new_user_vec
+                else:
+                    src_idx = user_texts[user_texts["username"] == source].index[0]
+                    src_vec = tfidf_matrix[src_idx]
+                sims_to_src = cosine_similarity(tfidf_matrix, src_vec).flatten()
+                h_g_dict = dict(zip(user_texts["username"], 1 - sims_to_src))
+            except:
+                pass
+            
+            st.write("---")
+            st.markdown(f"### ⚡ **Detail Analisis Rute Aktif Anda: @{source} ➔ @{goal}**")
+            st.write(f"Berikut adalah pembongkaran langkah-demi-langkah dari pencarian rute terakhir yang Anda jalankan secara dinamis melalui dashboard:")
+            
+            rows = []
+            for idx, node in enumerate(path):
+                cluster_id = active_partition.get(node, -1)
+                hs_val = active_G.nodes[node].get("h_value", 1.0) if node in active_G else 1.0
+                hg_val = h_g_dict.get(node, 1.0)
+                
+                deg = active_G.degree(node) if node in active_G else 0
+                if node == source:
+                    role = "🏁 <b>Source (Titik Awal)</b>"
+                elif node == goal:
+                    role = "🎯 <b>Goal (Titik Tujuan)</b>"
+                elif node == "prabowo" or node == "jokowi":
+                    role = "👑 <b>Hub Nasional (Sentral)</b>"
+                elif deg > 30:
+                    role = "🌉 <b>Akun Jembatan (Hub)</b>"
+                else:
+                    role = "🚶 <b>Langkah Transisi</b>"
+                
+                rows.append(f"""
+                <tr style="border-bottom: 1px solid #334155;">
+                    <td style="padding: 10px; font-weight: 600; color: #fbbf24;">Langkah {idx+1}: @{node}</td>
+                    <td style="padding: 10px; color: #cbd5e1;">{role}</td>
+                    <td style="padding: 10px; color: #cbd5e1;">Cluster #{cluster_id if cluster_id != -1 else "Terisolasi"}</td>
+                    <td style="padding: 10px; color: #e2e8f0; font-family: monospace;">h_s = {hs_val:.4f}</td>
+                    <td style="padding: 10px; color: #e2e8f0; font-family: monospace;">h_g = {hg_val:.4f}</td>
+                </tr>
+                """)
+                
+            st.markdown(f"""
+            <table style="width:100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background-color: #1e293b; border-bottom: 2px solid #475569;">
+                        <th style="padding: 10px; text-align: left; color: #f8fafc;">Nama Node</th>
+                        <th style="padding: 10px; text-align: left; color: #f8fafc;">Peran Struktural</th>
+                        <th style="padding: 10px; text-align: left; color: #f8fafc;">Kluster Komunitas</th>
+                        <th style="padding: 10px; text-align: left; color: #f8fafc;">Jarak Netral (h_s)</th>
+                        <th style="padding: 10px; text-align: left; color: #f8fafc;">Jarak Asal (h_g)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {"".join(rows)}
+                </tbody>
+            </table>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+            **Analisis Dinamis Lintasan:**
+            * Rute ini menghubungkan **@{source}** (asal) ke **@{goal}** (tujuan) dalam **{len(path)} simpul** dengan total biaya lintasan sebesar **{cost_val:.4f}**.
+            * Algoritma MBDA\\* mengoptimalkan jalur dengan meminimalkan selisih heuristik konten $[h_s(n) - h_g(n)]$ sambil mengikuti interaksi mention nyata ($g(n)$). 
+            * Nilai $h_s$ yang bergradasi dari simpul awal ke simpul akhir menunjukkan perpindahan topik yang mulus menuju netralitas tanpa lonjakan konten yang drastis (*content shock*).
+            """)
 else:
     st.info("👈 Silakan masukkan username Twitter/X di panel samping (sidebar) dan jalankan analisis, atau pilih Akun Demo untuk mulai bereksplorasi.")
