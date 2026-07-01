@@ -19,7 +19,7 @@ load_dotenv()
 # App configuration
 st.set_page_config(
     page_title="Mitigate Filter Bubble — MBDA*",
-    page_icon="🕸️",
+    page_icon="assets/logo.png",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -606,8 +606,12 @@ base_positions = get_base_layout(G_lcc) if G_lcc is not None else None
 cluster_profiles = get_cluster_profiles(df_raw, partition_sub) if df_raw is not None and partition_sub is not None else None
 
 # Header Title
-st.markdown('<div class="app-title">Dashboard Mitigasi Filter Bubble</div>', unsafe_allow_html=True)
-st.markdown('<div class="app-subtitle">Visualisasi jalur optimasi jembatan sosial menggunakan algoritma Modified Bidirectional A* (MBDA*)</div>', unsafe_allow_html=True)
+col_logo, col_title = st.columns([1, 12])
+with col_logo:
+    st.image("assets/logo.png", use_container_width=True)
+with col_title:
+    st.markdown('<div class="app-title" style="margin-top: -10px;">Dashboard Mitigasi Filter Bubble</div>', unsafe_allow_html=True)
+    st.markdown('<div class="app-subtitle">Visualisasi jalur optimasi jembatan sosial menggunakan algoritma Modified Bidirectional A* (MBDA*)</div>', unsafe_allow_html=True)
 
 # Sidebar setup
 st.sidebar.title("🛠️ Konfigurasi")
